@@ -25,8 +25,8 @@ public:
     QWidget *centralwidget;
     QPushButton *localGameButton;
     QLabel *label;
-    QLabel *label_2;
     QPushButton *aiGameButton;
+    QLabel *label_2;
 
     void setupUi(QMainWindow *MainWindow)
     {
@@ -46,20 +46,19 @@ public:
         localGameButton->setFont(font);
         label = new QLabel(centralwidget);
         label->setObjectName(QString::fromUtf8("label"));
-        label->setGeometry(QRect(0, 50, 500, 50));
+        label->setGeometry(QRect(0, 125, 500, 100));
         QFont font1;
-        font1.setPointSize(24);
+        font1.setFamily(QString::fromUtf8("Calibri"));
+        font1.setPointSize(18);
         label->setFont(font1);
         label->setAlignment(Qt::AlignCenter);
-        label_2 = new QLabel(centralwidget);
-        label_2->setObjectName(QString::fromUtf8("label_2"));
-        label_2->setGeometry(QRect(0, 125, 500, 50));
-        label_2->setFont(font);
-        label_2->setAlignment(Qt::AlignCenter);
         aiGameButton = new QPushButton(centralwidget);
         aiGameButton->setObjectName(QString::fromUtf8("aiGameButton"));
         aiGameButton->setGeometry(QRect(175, 350, 150, 70));
         aiGameButton->setFont(font);
+        label_2 = new QLabel(centralwidget);
+        label_2->setObjectName(QString::fromUtf8("label_2"));
+        label_2->setGeometry(QRect(0, 100, 500, 50));
         MainWindow->setCentralWidget(centralwidget);
 
         retranslateUi(MainWindow);
@@ -71,9 +70,9 @@ public:
     {
         MainWindow->setWindowTitle(QCoreApplication::translate("MainWindow", "AI  \344\272\224\345\255\220\346\243\213", nullptr));
         localGameButton->setText(QCoreApplication::translate("MainWindow", "\346\234\254\345\234\260\346\270\270\346\210\217", nullptr));
-        label->setText(QCoreApplication::translate("MainWindow", "AI \344\272\224\345\255\220\346\243\213", nullptr));
-        label_2->setText(QCoreApplication::translate("MainWindow", "CS2209 \350\265\226\347\246\271\346\254\243 U202217232", nullptr));
+        label->setText(QCoreApplication::translate("MainWindow", "Gobang AI", nullptr));
         aiGameButton->setText(QCoreApplication::translate("MainWindow", "\344\272\272\346\234\272\346\270\270\346\210\217", nullptr));
+        label_2->setText(QCoreApplication::translate("MainWindow", "TextLabel", nullptr));
     } // retranslateUi
 
 };

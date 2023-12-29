@@ -4,6 +4,7 @@
 
 #include "board.h"
 #include "gobangai.h"
+#include "ui_style.h"
 #include <QWidget>
 #include <QTimer>
 #include <QMessageBox>
@@ -36,6 +37,9 @@ public slots:
 	void TakeAiPiece(int x, int y);
 	void SetBoardPiece(int x, int y);
 
+protected:
+	virtual void mousePressEvent(QMouseEvent* event);
+
 signals:
 	void GameOver(GameStatus);
 	void ReturnToMainWindow();
@@ -43,6 +47,7 @@ signals:
 private:
 	Ui::Controller* ui;
 	GobangAi* ai;
+	UIPushbutton titleButton[TITLE_BUTTON_N];
 
 	QTimer* BlackTimer;
 	QTimer* WhiteTimer;

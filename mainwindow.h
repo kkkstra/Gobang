@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "controller.h"
+#include "ui_style.h"
 
 #include <QMainWindow>
 
@@ -19,6 +20,9 @@ public:
 	MainWindow(QWidget* parent = nullptr);
 	~MainWindow();
 
+protected:
+	virtual void mousePressEvent(QMouseEvent* event);
+
 private slots:
 	void OnLocalGameButtonClicked();
 	void OnAiGameButtonClicked();
@@ -26,5 +30,6 @@ private slots:
 private:
 	Ui::MainWindow* ui;
 	Controller* controller;
+	UIPushbutton titleButton[TITLE_BUTTON_N];
 };
 #endif // MAINWINDOW_H

@@ -54,6 +54,7 @@ public:
 	void Undo();
 	GameMode GetGameMode();
 	const QSet<Player>& GetPlayers();
+	Player GetCurrentPlayer();
 	void DropPiece(int X, int Y);
 
 public:

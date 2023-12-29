@@ -40,7 +40,7 @@
     <property name="geometry">
      <rect>
       <x>75</x>
-      <y>600</y>
+      <y>550</y>
       <width>100</width>
       <height>50</height>
      </rect>
@@ -67,7 +67,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>25</y>
+       <y>64</y>
        <width>200</width>
        <height>50</height>
       </rect>
@@ -82,34 +82,13 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="balckLabel">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>75</y>
-       <width>200</width>
-       <height>50</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>16</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>倒计时</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
     <widget class="QLCDNumber" name="blackTimer">
      <property name="geometry">
       <rect>
-       <x>0</x>
+       <x>25</x>
        <y>125</y>
-       <width>200</width>
-       <height>75</height>
+       <width>150</width>
+       <height>50</height>
       </rect>
      </property>
     </widget>
@@ -117,7 +96,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>210</y>
+       <y>200</y>
        <width>200</width>
        <height>25</height>
       </rect>
@@ -140,7 +119,7 @@
     <property name="geometry">
      <rect>
       <x>25</x>
-      <y>300</y>
+      <y>250</y>
       <width>200</width>
       <height>250</height>
      </rect>
@@ -149,7 +128,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>25</y>
+       <y>64</y>
        <width>200</width>
        <height>50</height>
       </rect>
@@ -161,34 +140,13 @@
       <set>Qt::AlignCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="whiteLabel">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>75</y>
-       <width>200</width>
-       <height>50</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>16</pointsize>
-      </font>
-     </property>
-     <property name="text">
-      <string>倒计时</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
-    </widget>
     <widget class="QLCDNumber" name="whiteTimer">
      <property name="geometry">
       <rect>
-       <x>0</x>
+       <x>25</x>
        <y>125</y>
-       <width>200</width>
-       <height>75</height>
+       <width>150</width>
+       <height>50</height>
       </rect>
      </property>
     </widget>
@@ -196,7 +154,7 @@
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>210</y>
+       <y>200</y>
        <width>200</width>
        <height>25</height>
       </rect>
@@ -219,7 +177,7 @@
     <property name="geometry">
      <rect>
       <x>75</x>
-      <y>675</y>
+      <y>625</y>
       <width>100</width>
       <height>50</height>
      </rect>

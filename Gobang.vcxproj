@@ -203,6 +203,7 @@
     <ClCompile Include="gobangai.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainwindow.cpp" />
+    <ClCompile Include="ui_style.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="board.h" />
@@ -240,6 +241,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="gobangai_macro.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="ui_style.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Gobang.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Gobang.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(QtMsBuild)\qt.targets" Condition="Exists('$(QtMsBuild)\qt.targets')" />

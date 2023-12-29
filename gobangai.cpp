@@ -1,5 +1,7 @@
 #include "gobangai.h"
 
+int startTime, costTime;
+
 Player GetOppositePlayer(Player player) {
 	return (player == BLACK_PLAYER) ? WHITE_PLAYER : BLACK_PLAYER;
 }
@@ -21,7 +23,7 @@ GobangAi::GobangAi() {}
 void GobangAi::InitGobangAi() {
 	for (int i = 0; i < 15; i++) {
 		for (int j = 0; j < 15; j++) {
-			board[i][j] = NO_PIECE;
+			board[i][j] = NO_CHESS;
 		}
 	}
 	round = 0;
@@ -30,16 +32,16 @@ void GobangAi::InitGobangAi() {
 
 
 void GobangAi::InitTypeTable() {
-    memset(typeTable, 0, sizeof(typeTable)); // 全部设为0
-    // 白连5,ai赢
+    memset(typeTable, 0, sizeof(typeTable));
+
     typeTable[2][2][2][2][2][2] = WIN;
     typeTable[2][2][2][2][2][0] = WIN;
     typeTable[0][2][2][2][2][2] = WIN;
     typeTable[2][2][2][2][2][1] = WIN;
     typeTable[1][2][2][2][2][2] = WIN;
-    typeTable[3][2][2][2][2][2] = WIN; // 边界考虑
+    typeTable[3][2][2][2][2][2] = WIN;
     typeTable[2][2][2][2][2][3] = WIN;
-    // 黑连5,ai输
+
     typeTable[1][1][1][1][1][1] = LOSE;
     typeTable[1][1][1][1][1][0] = LOSE;
     typeTable[0][1][1][1][1][1] = LOSE;
@@ -47,40 +49,40 @@ void GobangAi::InitTypeTable() {
     typeTable[2][1][1][1][1][1] = LOSE;
     typeTable[3][1][1][1][1][1] = LOSE;
     typeTable[1][1][1][1][1][3] = LOSE;
-    // 白活4
+
     typeTable[0][2][2][2][2][0] = FLEX4;
-    // 黑活4
+
     typeTable[0][1][1][1][1][0] = flex4;
-    // 白活3
+
     typeTable[0][2][2][2][0][0] = FLEX3;
     typeTable[0][0][2][2][2][0] = FLEX3;
     typeTable[0][2][0][2][2][0] = FLEX3;
     typeTable[0][2][2][0][2][0] = FLEX3;
-    // 黑活3
+
     typeTable[0][1][1][1][0][0] = flex3;
     typeTable[0][0][1][1][1][0] = flex3;
     typeTable[0][1][0][1][1][0] = flex3;
     typeTable[0][1][1][0][1][0] = flex3;
-    // 白活2
+
     typeTable[0][2][2][0][0][0] = FLEX2;
     typeTable[0][2][0][2][0][0] = FLEX2;
     typeTable[0][2][0][0][2][0] = FLEX2;
     typeTable[0][0][2][2][0][0] = FLEX2;
     typeTable[0][0][2][0][2][0] = FLEX2;
     typeTable[0][0][0][2][2][0] = FLEX2;
-    // 黑活2
+
     typeTable[0][1][1][0][0][0] = flex2;
     typeTable[0][1][0][1][0][0] = flex2;
     typeTable[0][1][0][0][1][0] = flex2;
     typeTable[0][0][1][1][0][0] = flex2;
     typeTable[0][0][1][0][1][0] = flex2;
     typeTable[0][0][0][1][1][0] = flex2;
-    // 白活1
+
     typeTable[0][2][0][0][0][0] = FLEX1;
     typeTable[0][0][2][0][0][0] = FLEX1;
     typeTable[0][0][0][2][0][0] = FLEX1;
     typeTable[0][0][0][0][2][0] = FLEX1;
-    // 黑活1
+
     typeTable[0][1][0][0][0][0] = flex1;
     typeTable[0][0][1][0][0][0] = flex1;
     typeTable[0][0][0][1][0][0] = flex1;
@@ -285,21 +287,23 @@ void GobangAi::InitTypeTable() {
 
 void GobangAi::run() {
 	srand(time(NULL));
+    startTime = QTime::currentTime().msecsSinceStartOfDay();
 
 	if (round == 0) {
-        PlayRound1();
-	} else {
-		MinMaxSearch(aiPlayer, 0, -INF, INF);
+        PlayRound0();
+    } else  {
+        if (!KillSearch(aiPlayer, 0))
+            MinMaxSearch(aiPlayer, 0, -INF, INF);
 	}
 
 	round++;
-	qDebug() << "AI drop: " << nextDrop.x() << " " << nextDrop.y();
+	//qDebug() << "AI drop: " << nextDrop.x() << " " << nextDrop.y();
     emit AiDropPiece(nextDrop.x(), nextDrop.y());
 }
 
-void GobangAi::PlayRound1() {
+void GobangAi::PlayRound0() {
 	// 若ai先手，则下在正中心
-	if (board[7][7] == NO_PIECE) {
+	if (board[7][7] == NO_CHESS) {
 		SetNextDrop(7, 7);
 	} else {
 		const int dir[2] = { -1, 1 };
@@ -308,24 +312,37 @@ void GobangAi::PlayRound1() {
 }
 
 int GobangAi::MinMaxSearch(const Player player, int depth, int alpha, int beta) {
-    qDebug() << "depth: " << depth;
-    int score = Evaluate();
-    if (depth >= BASE_DEPTH) {
-        qDebug() << "score: " << score;
-        return score;
+    //qDebug() << "Searching...";
+    int res, record[17];
+    int score = Evaluate(res, record);
+
+    costTime = QTime::currentTime().msecsSinceStartOfDay() - startTime;
+    if (costTime > 15 * 1000) return score;
+
+    if (depth == BASE_DEPTH || res != R_DRAW) {
+        if (depth == BASE_DEPTH) {
+            QPoint points[POINTS_BUF_SIZE];
+            QPoint* p_now = points, * p_end = points + SeekPoints(points, AI_CHESS, 1);
+            board[p_now->x()][p_now->y()] = AI_CHESS;
+            score = Evaluate(res, record);
+            board[p_now->x()][p_now->y()] = NO_CHESS;
+            return score;
+        } else {
+            return score;
+        }
     }
 
     QPoint points[POINTS_BUF_SIZE];
-    QPoint* p_now = points, * p_end = points + SeekPoints(points, player);
 
     if (player == aiPlayer) { // max层
+        QPoint* p_now = points, * p_end = points + SeekPoints(points, AI_CHESS, AVA_POINTS_NUM);
         while (p_now != p_end) {
-            board[p_now->x()][p_now->y()] = PlayerToPiece(player);
+            board[p_now->x()][p_now->y()] = AI_CHESS;
             score = MinMaxSearch(GetOppositePlayer(player), depth + 1, alpha, beta);
-            board[p_now->x()][p_now->y()] = NO_PIECE;
+            board[p_now->x()][p_now->y()] = NO_CHESS;
             if (score > alpha) {
                 alpha = score;
-                if (depth == BASE_DEPTH) {
+                if (!depth) {
                     SetNextDrop(p_now->x(), p_now->y());
                 }
             }
@@ -335,10 +352,11 @@ int GobangAi::MinMaxSearch(const Player player, int depth, int alpha, int beta) 
         }
         return alpha;
     } else { // min层
+        QPoint* p_now = points, * p_end = points + SeekPoints(points, HUM_CHESS, AVA_POINTS_NUM);
         while (p_now != p_end) {
-            board[p_now->x()][p_now->y()] = PlayerToPiece(player);
+            board[p_now->x()][p_now->y()] = HUM_CHESS;
             score = MinMaxSearch(GetOppositePlayer(player), depth + 1, alpha, beta);
-            board[p_now->x()][p_now->y()] = NO_PIECE;
+            board[p_now->x()][p_now->y()] = NO_CHESS;
             if (score < beta)
                 beta = score;
             if (beta <= alpha)
@@ -349,24 +367,111 @@ int GobangAi::MinMaxSearch(const Player player, int depth, int alpha, int beta) 
     }
 }
 
-int GobangAi::SeekPoints(QPoint* points, Player player) {
-    player = BLACK_PLAYER;
-    int r, c, i, j, cnt;
-    bool notFound;
-    int nearCnt;
+bool GobangAi::CheckBound(int x, int y) {
+    if (x >= 0 && x < 15 && y >= 0 && y < 15) return true;
+    else return false;
+}
 
-    for (r = cnt = 0; r < 15; r++) {
-        for (c = 0; c < 15; c++) {
-            if (board[r][c] == NO_PIECE) {
-                notFound = true;
-                nearCnt = 0;
-                for (i = r - 2; i <= r + 2 && notFound; i++) {
-                    for (j = c - 2; j <= c + 2; j++) {
-                        if (i >= 0 && i < 15 && j >= 0 && j < 15 && board[i][j])
+QPoint GobangAi::getXY(int row, int col, int dir, int rel) {
+    QPoint p;
+    if (dir == RIGHT) {
+        p.setX(row);
+        p.setY(col + rel);
+    } else if (dir == UP) {
+        p.setX(row - rel);
+        p.setY(col);
+    } else if (dir == UPRIGHT) {
+        p.setX(row - rel);
+        p.setY(col + rel);
+    } else if (dir == UPLEFT) {
+        p.setX(row - rel);
+        p.setY(col - rel);
+    }
+    return p;
+}
+
+int GobangAi::EvaluatePosWorth(int x, int y, int chessid) {
+    int sum = 0;
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 5; ++j) {
+            QPoint start = getXY(x, y, RIGHT + i, j - 4);
+            QPoint end = getXY(start.x(), start.y(), RIGHT + i, 4);
+            if (CheckBound(start.x(), start.y()) && CheckBound(end.x(), end.y())) {
+                int humCount = 0;
+                int aiCount = 0;
+                for (int k = 0; k < 5; ++k) {
+                    QPoint tmp = getXY(start.x(), start.y(), RIGHT + i, k);
+                    if (board[tmp.x()][tmp.y()] == HUM_CHESS)
+                        humCount++;
+                    if (board[tmp.x()][tmp.y()] == AI_CHESS)
+                        aiCount++;
+                }
+                sum += CalculatePosScore(humCount, aiCount, chessid);
+            }
+        }
+    }
+    return sum;
+}
+
+int GobangAi::CalculatePosScore(int humCount, int aiCount, int chessid) {
+    if (chessid == HUM_CHESS && humCount == 5)
+        return 9999999;
+    if (chessid == AI_CHESS && aiCount == 5)
+        return 9999999;
+    if (humCount == 0 && aiCount == 0)
+        return 7;
+    else if (humCount >= 1 && aiCount >= 1)
+        return 0;
+    else if (chessid == HUM_CHESS) {
+        if (humCount == 1 && aiCount == 0)
+            return 35;
+        else if (humCount == 2 && aiCount == 0)
+            return 800;
+        else if (humCount == 3 && aiCount == 0)
+            return 15000;
+        else if (humCount == 4 && aiCount == 0)
+            return 800000;
+        else if (humCount == 0 && aiCount == 1)
+            return 15;
+        else if (humCount == 0 && aiCount == 2)
+            return 400;
+        else if (humCount == 0 && aiCount == 3)
+            return 1800;
+        else
+            return 100000;
+    } else {
+        if (humCount == 1 && aiCount == 0)
+            return 15;
+        else if (humCount == 2 && aiCount == 0)
+            return 400;
+        else if (humCount == 3 && aiCount == 0)
+            return 1800;
+        else if (humCount == 4 && aiCount == 0)
+            return 100000;
+        else if (humCount == 0 && aiCount == 1)
+            return 35;
+        else if (humCount == 0 && aiCount == 2)
+            return 800;
+        else if (humCount == 0 && aiCount == 3)
+            return 15000;
+        else
+            return 800000;
+    }
+}
+
+int GobangAi::SeekPoints(QPoint* points, int chessid, int limit) {
+    QList<PointScore> avaPoints;
+    for (int r = 0; r < 15; r++) {
+        for (int c = 0; c < 15; c++) {
+            if (board[r][c] == NO_CHESS) {
+                bool notFound = true;
+                int nearCnt = 0;
+                for (int i = r - 2; i <= r + 2 && notFound; i++) {
+                    for (int j = c - 2; j <= c + 2; j++) {
+                        if (i >= 0 && i < 15 && j >= 0 && j < 15 && board[i][j] != NO_CHESS)
                             ++nearCnt;
                         if (nearCnt == NEAR_CNT) {
-                            points[cnt] = QPoint(r, c);
-                            ++cnt;
+                            avaPoints.append(PointScore(r, c));
                             notFound = false;
                             break;
                         }
@@ -375,16 +480,107 @@ int GobangAi::SeekPoints(QPoint* points, Player player) {
             }
         }
     }
+
+    for (auto& point : avaPoints) {
+        int x = point.pos.x();
+        int y = point.pos.y();
+        point.score = EvaluatePosWorth(x, y, chessid);
+    }
+
+    std::sort(avaPoints.begin(), avaPoints.end(), [](PointScore p, PointScore q) {
+        return p.score > q.score;
+    });
+
+    int cnt = 0;
+    for (const auto& point : avaPoints) {
+        points[cnt] = point.pos;
+        cnt++;
+        if (cnt >= AVA_POINTS_NUM) break;
+    }
+    //qDebug() << "seek points: " << cnt;
     return cnt;
 }
 
-int GobangAi::Evaluate() {
+bool GobangAi::KillSearch(const Player player, int depth) {
+    int res, record[17];
+    int score = Evaluate(res, record);
+    if (depth == KILL_DEPTH || res != R_DRAW) {
+        if (depth == KILL_DEPTH) {
+            QPoint points[POINTS_BUF_SIZE];
+            QPoint* p_now = points, * p_end = points + SeekPoints(points, AI_CHESS, 1);
+            board[p_now->x()][p_now->y()] = AI_CHESS;
+            Evaluate(res, record);
+            board[p_now->x()][p_now->y()] = NO_CHESS;
+            if (res == R_AI) return true;
+            else return false;
+        } else if (res == R_AI) return true; // 找到ai杀棋
+        else return false;
+    }
+    
+    if (player == aiPlayer) {
+        if (depth < 4) { // 最开始4层选所有能走的10个点
+            QPoint points[POINTS_BUF_SIZE];
+            QPoint* p_now = points, * p_end = points + SeekPoints(points, AI_CHESS, KILL_POINTS_NUM);
+            while (p_now != p_end) {
+                board[p_now->x()][p_now->y()] = AI_CHESS;
+                bool res = KillSearch(GetOppositePlayer(player), depth + 1);
+                board[p_now->x()][p_now->y()] = NO_CHESS;
+                if (res) {
+                    if (depth == 0) SetNextDrop(p_now->x(), p_now->y());
+                    return true;
+                }
+                p_now++;
+            }
+            return false;
+        } else { // 只选杀棋点
+            QPoint killPoints[POINTS_BUF_SIZE];
+            QPoint* p_now = killPoints, * p_end = killPoints + SeekKillPoints(killPoints);
+
+            while (p_now != p_end) {
+                board[p_now->x()][p_now->y()] = AI_CHESS;
+                bool res = KillSearch(GetOppositePlayer(player), depth + 1);
+                board[p_now->x()][p_now->y()] = NO_CHESS;
+                if (res) return true;
+                p_now++;
+            }
+            return false;
+        }
+    } else {
+        QPoint points[POINTS_BUF_SIZE];
+        QPoint* p_now = points, * p_end = points + SeekPoints(points, HUM_CHESS, 1);
+
+        board[p_now->x()][p_now->y()] = HUM_CHESS;
+        bool res = KillSearch(GetOppositePlayer(player), depth + 1);
+        board[p_now->x()][p_now->y()] = NO_CHESS;
+        return res;
+    }
+}
+
+int GobangAi::SeekKillPoints(QPoint* killPoints) {
+    int cnt, res, record[17];
+    QPoint points[POINTS_BUF_SIZE];
+    QPoint* p_now = points, * p_end = points + SeekPoints(points, AI_CHESS, AVA_POINTS_NUM);
+
+    cnt = 0;
+    while (p_now != p_end) {
+        board[p_now->x()][p_now->y()] = AI_CHESS;
+        Evaluate(res, record);
+        if (record[WIN] + record[FLEX4] + record[BLOCK4] + record[FLEX3] > 0) {
+            killPoints[cnt] = QPoint(p_now->x(), p_now->y());
+            cnt++;
+        }
+        board[p_now->x()][p_now->y()] = NO_CHESS;
+        p_now++;
+    }
+    return cnt;
+}
+
+int GobangAi::Evaluate(int &res, int record[17]) {
     // 各棋型权重
     int weight[17] = { 0, 1000000, -10000000, 50000, -100000, 400, -100000, 400, -8000, 20, -50, 20, -50, 1, -3, 1, -3 };
 
     int i, j, type;
-    int record[17]; // 统计4个方向上每种棋型的个数
-    memset(record, 0, sizeof(record));
+    for (int i = 0; i < 17; ++i) record[i] = 0;
 
     int A[17][17]; // 包括边界的虚拟大棋盘,board[i][j]=A[i-1][j-1],3表示边界
     for (int i = 0; i < 17; ++i)
@@ -433,6 +629,9 @@ int GobangAi::Evaluate() {
         score += record[i] * weight[i]; // 计分
     }
 
+    if (record[WIN] > 0) res = R_AI;
+    else if (record[LOSE] > 0) res = R_HUM;
+
     return score;
 }
 
@@ -447,11 +646,11 @@ void GobangAi::SetNextDrop(int x, int y) {
 }
 
 void GobangAi::DropPiece(int x, int y, BoardPiece piece) {
-	board[x][y] = piece;
+    board[x][y] = PieceToPlayer(piece) == aiPlayer ? AI_CHESS : HUM_CHESS;
 }
 
 void GobangAi::TakePiece(int x, int y) {
-    board[x][y] = NO_PIECE;
+    board[x][y] = NO_CHESS;
 }
 
 void GobangAi::DecreaseRound() {

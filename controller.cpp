@@ -1,12 +1,28 @@
 #include "controller.h"
 #include "ui_controller.h"
 #include <QDebug>
+#include <QEvent>
+#include <qt_windows.h>
 
 Controller::Controller(QWidget* parent)
 	: QWidget(parent)
 	, ui(new Ui::Controller)
 {
 	ui->setupUi(this);
+	setWindowFlags(Qt::FramelessWindowHint | Qt::WindowMinimizeButtonHint);
+
+	for (int i = 0; i < TITLE_BUTTON_N; i++) {
+		titleButton[i].setParent(this);
+		titleButton[i].setGeometry(1000 - TITLE_BUTTON_N * (int)(TITLE_BUTTON_ITV * 1.15) + i * TITLE_BUTTON_ITV, TITLE_BUTTON_U + i * TITLE_BUTTON_ITV / 16,
+			TITLE_BUTTON_W, TITLE_BUTTON_H);
+		titleButton[i].setStyleSheet(TITLE_BUTTON_STYLE[i]);
+	}
+
+	titleButton[MINI_BUTTON].setText("_");
+	titleButton[CLOSE_BUTTON].setText("x");
+
+	connect(titleButton + MINI_BUTTON, &UIPushbutton::clicked, this, &Controller::showMinimized);
+	connect(titleButton + CLOSE_BUTTON, &UIPushbutton::clicked, this, &Controller::close);
 
 	ai = new GobangAi();
 
@@ -38,6 +54,12 @@ void Controller::InitController() {
 	connect(ui->returnButton, &QPushButton::clicked, this, &Controller::ReturnToMain);
 	connect(ui->undoButton, &QPushButton::clicked, this, &Controller::Undo);
 	connect(ai, &GobangAi::AiDropPiece, this, &Controller::SetBoardPiece);
+
+
+	ui->undoButton->setStyleSheet(CTRL_BUTTON_STYLE);
+	ui->returnButton->setStyleSheet(CTRL_BUTTON_STYLE);
+
+	//title_button[i].setStyleSheet(TITLE_BUTTON_STYLE[i]);
 }
 
 void Controller::InitGame(GameMode mode) {
@@ -96,6 +118,8 @@ void Controller::UpdateWhiteTimer() {
 
 void Controller::EndGame(GameStatus gameStatus) {
 	// qDebug() << "End game! ";
+	BlackTimer->stop();
+	WhiteTimer->stop();
 	if (gameStatus == DRAW) {
 		QMessageBox::information(this, "游戏结束", "和棋", QMessageBox::Ok);
 	}
@@ -107,6 +131,12 @@ void Controller::EndGame(GameStatus gameStatus) {
 }
 
 void Controller::Undo() {
+	auto players = ui->chessboard->GetPlayers();
+	auto player = ui->chessboard->GetCurrentPlayer();
+	if (ui->chessboard->GetGameMode() == AI_MODE && !players.contains(player)) {
+		QMessageBox::information(this, "提示", "请等待AI思考结束.", QMessageBox::Ok);
+		return;
+	}
 	ui->chessboard->Undo();
 }
 
@@ -130,11 +160,11 @@ void Controller::SetGameMode(GameMode mode) {
 			players << WHITE_PLAYER;
 			ai->SetPlayer(BLACK_PLAYER);
 		}
-		setWindowTitle(tr("AI 五子棋 - 人机游戏"));
+		setWindowTitle("人机游戏");
 	}
 	else {
 		players << BLACK_PLAYER << WHITE_PLAYER;
-		setWindowTitle(tr("AI 五子棋 - 本地游戏"));
+		setWindowTitle("本地游戏");
 	}
 	ui->chessboard->InitBoard(mode, players);
 }
@@ -144,18 +174,18 @@ void Controller::AiSwitchPiece(Player player) {
 	if (ui->chessboard->GetGameMode() == AI_MODE) {
 		if (!players.contains(player)) {
 			if (player == BLACK_PLAYER) {
-				ui->blackLable2->setText("努力思考中(>_<)");
+				ui->blackLable2->setText("AI：努力思考中(>_<)");
 			}
 			else {
-				ui->whiteLable2->setText("努力思考中(>_<)");
+				ui->whiteLable2->setText("AI：努力思考中(>_<)");
 			}
 			ai->start();
 		} else {
 			if (player == BLACK_PLAYER) {
-				ui->whiteLable2->setText("");
+				ui->whiteLable2->setText("AI");
 			}
 			else {
-				ui->blackLable2->setText("");
+				ui->blackLable2->setText("AI");
 			}
 		}
 	}
@@ -175,6 +205,17 @@ void Controller::TakeAiPiece(int x, int y) {
 
 void Controller::ReturnToMain() {
 	emit ReturnToMainWindow();
+}
+
+void Controller::mousePressEvent(QMouseEvent* event) {
+	if (ReleaseCapture() && event->y() <= TITLE_BUTTON_D)
+	{
+		QWidget* pWindow = this->window();
+		if (pWindow->isTopLevel())
+		{
+			SendMessage(HWND(pWindow->winId()), WM_SYSCOMMAND, SC_MOVE + HTCAPTION, 0);
+		}
+	}
 }
 
 Controller::~Controller()

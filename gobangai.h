@@ -8,11 +8,18 @@
 #include "board.h"
 #include "gobangai_macro.h"
 
+struct PointScore {
+	QPoint pos;
+	int score;
+	PointScore(int x, int y, int score = -INF)
+		: pos(x, y) {}
+};
+
 class GobangAi : public QThread {
 	Q_OBJECT
 private:
 	int round;
-	BoardPiece board[15][15];
+	int board[15][15];
 	QPoint nextDrop;
 	Player aiPlayer;
 	Player humanPlayer;
@@ -36,9 +43,15 @@ private:
 	void InitTypeTable();
 	void SetNextDrop(int x, int y);
 	int MinMaxSearch(const Player player, const int depth, int alpha, int beta);
-	void PlayRound1(); // 第一局
-	int SeekPoints(QPoint* points, Player player);
-	int Evaluate();
+	void PlayRound0(); // 第一局
+	int SeekPoints(QPoint* points, int chessid, int limit);
+	int Evaluate(int &res, int record[17]);
+	int EvaluatePosWorth(int x, int y, int chessid);
+	int CalculatePosScore(int black, int white, int chessid);
+	QPoint getXY(int row, int col, int dir, int rel);
+	bool CheckBound(int x, int y);
+	bool KillSearch(const Player player, int depth);
+	int SeekKillPoints(QPoint* points);
 };
 
 #endif // GOBANGAI_H

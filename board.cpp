@@ -46,6 +46,7 @@ void Board::paintEvent(QPaintEvent* event) {
 	brush.setStyle(Qt::SolidPattern);
 	painter.setBrush(brush);
 
+	painter.drawRect(QRect(QPoint(START_POS.x() - 5, START_POS.y() - 5), LATT_SIZE * 14 + QSize(10, 10)));
 	for (int i = 0; i < 14; i++) {
 		for (int j = 0; j < 14; j++) {
 			painter.drawRect(QRect(START_POS + QPoint(i * LATT_SIZE.width(), j * LATT_SIZE.height()), LATT_SIZE));
@@ -67,24 +68,36 @@ void Board::paintEvent(QPaintEvent* event) {
 	}
 
 	// 选框
-	QColor color = currentPlayer == WHITE_PLAYER ? QColor("#FFFFFF") : QColor("#000000");
+	QColor color = currentPlayer == WHITE_PLAYER ? QColor("#EEEEEE") : QColor("#333333");
 	brush.setColor(color);
 	painter.setBrush(brush);
-	painter.setPen(Qt::red);
-	painter.drawRect(QRect(mousePos - QPoint(10, 10), QSize(20, 20)));
+	painter.setPen(QPen(QColor("#333333"), 2));
+	painter.drawRect(QRect(mousePos - QPoint(8, 8), QSize(16, 16)));
 
 	// 绘制棋子
 	painter.setPen(Qt::NoPen);
 	for (int i = 0; i < 15; i++) {
 		for (int j = 0; j < 15; j++) {
 			if (board[i][j] != NO_PIECE) {
-				QColor color = (board[i][j] == WHITE_PIECE) ? Qt::white : Qt::black;
+				QColor color = (board[i][j] == WHITE_PIECE) ? QColor("#EEEEEE") : QColor("#333333");
 				painter.setBrush(QBrush(color));
-				painter.drawEllipse(START_POS.x() - LATT_SIZE.width() / 2 + i * LATT_SIZE.width(),
-					START_POS.y() - LATT_SIZE.height() / 2 + j * LATT_SIZE.height(),
-					LATT_SIZE.width(), LATT_SIZE.height());
+				painter.setPen(QPen(QColor("#333333"), 3));
+				painter.drawEllipse(START_POS.x() - (LATT_SIZE.width() - 5) / 2 + i * LATT_SIZE.width(),
+					START_POS.y() - (LATT_SIZE.width() - 5) / 2 + j * LATT_SIZE.height(),
+					LATT_SIZE.width() - 5, LATT_SIZE.height() - 5);
 			}
 		}
+	}
+
+	if (!piecesRecord.empty()) {
+		QPoint last = piecesRecord.top();
+		int lx = last.x(), ly = last.y();
+		color = (board[lx][ly] == WHITE_PIECE) ? QColor("#333333") : QColor("#EEEEEE");
+		painter.setBrush(QBrush(color));
+		painter.setPen(QPen(color, 3));
+		painter.drawEllipse(START_POS.x() - 6 / 2 + last.x() * LATT_SIZE.width(),
+			START_POS.y() - 6 / 2 + last.y() * LATT_SIZE.height(),
+			6, 6);
 	}
 }
 
@@ -213,6 +226,8 @@ void Board::Undo() {
 GameMode Board::GetGameMode() { return gameMode; }
 
 const QSet<Player>& Board::GetPlayers() { return players; }
+
+Player Board::GetCurrentPlayer() { return currentPlayer; }
 
 Board::~Board()
 {
